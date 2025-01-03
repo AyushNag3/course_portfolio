@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollution Per Passenger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #333;
+            color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pollution Per Passenger</h1>
+
+        <h2>Problem Statement</h2>
+        <p>
+            In today’s world, air pollution caused by vehicles poses a significant threat to environmental and human health. Identifying and evaluating vehicles based on their pollution levels per passenger allows for better decision-making in optimizing transportation methods. This involves sorting vehicles by their pollution contribution per passenger, enabling policymakers to prioritize environmentally friendly choices.
+        </p>
+
+        <h2>Challenges</h2>
+        <ul>
+            <li>Handling datasets with multiple attributes such as pollution percentage and passenger capacity.</li>
+            <li>Ensuring efficient sorting of vehicles for large datasets.</li>
+            <li>Maintaining the accuracy of pollution-per-passenger calculations.</li>
+        </ul>
+
+        <h2>Solution</h2>
+        <p>
+            To address these challenges, the Heap Sort algorithm is utilized. This algorithm efficiently sorts vehicles based on pollution per passenger, ensuring a time complexity of O(n log n). The solution involves:
+        </p>
+        <ul>
+            <li>Calculating pollution per passenger for each vehicle.</li>
+            <li>Building a max-heap based on pollution per passenger.</li>
+            <li>Extracting and sorting vehicles in descending order of pollution per passenger.</li>
+        </ul>
+
+        <h2>C++ Implementation</h2>
+        <pre>
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;algorithm&gt;
+
+using namespace std;
+
+struct Vehicle {
+    string name;
+    int pollution;
+    int passengers; // Attribute for the number of passengers
+};
+
+void heapify(vector&lt;Vehicle&gt;&amp; vehicles, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    auto pollutionPerPassenger = [](const Vehicle&amp; v) {
+        return static_cast&lt;double&gt;(v.pollution) / v.passengers;
+    };
+
+    if (left &lt; n && pollutionPerPassenger(vehicles[left]) &gt; pollutionPerPassenger(vehicles[largest]))
+        largest = left;
+
+    if (right &lt; n && pollutionPerPassenger(vehicles[right]) &gt; pollutionPerPassenger(vehicles[largest]))
+        largest = right;
+
+    if (largest != i) {
+        swap(vehicles[i], vehicles[largest]);
+        heapify(vehicles, n, largest);
+    }
+}
+
+void heapSort(vector&lt;Vehicle&gt;&amp; vehicles) {
+    int n = vehicles.size();
+
+    for (int i = n / 2 - 1; i &gt;= 0; i--)
+        heapify(vehicles, n, i);
+
+    for (int i = n - 1; i &gt; 0; i--) {
+        swap(vehicles[0], vehicles[i]);
+        heapify(vehicles, i, 0);
+    }
+}
+
+void sortAndDisplayVehiclesByPollutionPerPassenger(int numPassengers) {
+    vector&lt;Vehicle&gt; allVehicles = {
+        {"Passenger Cars", 45, 5},
+        {"Light-Duty Trucks", 20, 3},
+        {"Heavy-Duty Trucks", 15, 2},
+        {"Motorcycles", 5, 2},
+        {"Buses", 5, 50},
+        {"Aviation", 5, 150},
+    };
+
+    vector&lt;Vehicle&gt; suitableVehicles;
+
+    for (const auto&amp; vehicle : allVehicles) {
+        if (vehicle.passengers &gt;= numPassengers) {
+            suitableVehicles.push_back(vehicle);
+        }
+    }
+
+    if (suitableVehicles.empty()) {
+        cout &lt;&lt; "No suitable vehicles found for " &lt;&lt; numPassengers &lt;&lt; " passengers.\n";
+        return;
+    }
+
+    heapSort(suitableVehicles);
+
+    cout &lt;&lt; "Vehicles suitable for " &lt;&lt; numPassengers &lt;&lt; " passengers, sorted by pollution per passenger (highest to lowest):\n";
+    for (const auto&amp; vehicle : suitableVehicles) {
+        double pollutionPerPassenger = static_cast&lt;double&gt;(vehicle.pollution) / vehicle.passengers;
+        cout &lt;&lt; vehicle.name &lt;&lt; " | Pollution per Passenger: " &lt;&lt; pollutionPerPassenger &lt;&lt; " | Total Pollution: "
+             &lt;&lt; vehicle.pollution &lt;&lt; "% | Passengers: " &lt;&lt; vehicle.passengers &lt;&lt; "\n";
+    }
+}
+
+int main() {
+    int numPassengers;
+
+    cout &lt;&lt; "Enter the number of passengers: ";
+    cin &gt;&gt; numPassengers;
+
+    sortAndDisplayVehiclesByPollutionPerPassenger(numPassengers);
+
+    return 0;
+}
+        </pre>
+    </div>
+</body>
+</html>

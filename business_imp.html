@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Graph Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        pre {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment Graph Simulation</h1>
+    <div id="problem-statement">
+        <h2>Problem Statement</h2>
+        <p>The goal of this project is to simulate a payment system using a graph data structure where each payment type (e.g., Credit, Debit, UPI, etc.) is a node, and the cost of transitioning from one type to another is represented by an edge. Users need a way to model these payment types and connections dynamically and calculate the shortest path for a transaction between two types.</p>
+
+        <h3>Challenges</h3>
+        <ul>
+            <li>Dynamic Graph Representation: The graph must be constructed dynamically based on user input for nodes and edges.</li>
+            <li>Efficient Pathfinding: Implementing an algorithm to find the shortest path between two nodes in the graph.</li>
+            <li>Handling Errors: Ensuring that invalid inputs (e.g., non-existent nodes or incorrect formats) are handled gracefully.</li>
+            <li>Scalability: The graph should handle a reasonably large number of nodes and edges without performance degradation.</li>
+        </ul>
+
+        <h3>Solution</h3>
+        <p>The solution uses a graph data structure where each node is represented by a <strong>PaymentNode</strong> object, and connections are stored as an adjacency list. The shortest path calculation is implemented using Dijkstra's algorithm, which ensures an optimal and efficient pathfinding process. This algorithm uses a priority queue to explore nodes with the smallest distance first, reducing unnecessary computations. Additionally, input validation and error handling mechanisms are included to ensure the robustness of the system.</p>
+
+        <p>This approach efficiently addresses the problem while providing users with an intuitive interface to interact with the graph.</p>
+    </div>
+    <pre>
+#include &lt;iostream&gt;
+#include &lt;unordered_map&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;queue&gt;
+#include &lt;climits&gt;
+#include &lt;algorithm&gt;
+
+using namespace std;
+
+struct PaymentNode {
+    string type; // Payment type (e.g., credit, debit, UPI, etc.)
+    vector<pair<PaymentNode*, int>> connections; // Connections to other payment types and their costs
+};
+
+class PaymentGraph {
+private:
+    unordered_map<string, PaymentNode*> nodes;
+
+public:
+    void addPaymentType(const string& type) {
+        if (nodes.find(type) == nodes.end()) {
+            nodes[type] = new PaymentNode{type, {}};
+        }
+    }
+
+    void addConnection(const string& from, const string& to, int cost) {
+        if (nodes.find(from) != nodes.end() && nodes.find(to) != nodes.end()) {
+            nodes[from]->connections.push_back({nodes[to], cost});
+        }
+    }
+
+    void findShortestPath(const string& start, const string& end) {
+        if (nodes.find(start) == nodes.end() || nodes.find(end) == nodes.end()) {
+            cout << "Payment types not found in the graph.\n";
+            return;
+        }
+
+        unordered_map<string, int> distances;
+        unordered_map<string, string> previous;
+        for (const auto& node : nodes) {
+            distances[node.first] = INT_MAX;
+        }
+        distances[start] = 0;
+
+        auto compare = [](pair<int, PaymentNode*> a, pair<int, PaymentNode*> b) {
+            return a.first > b.first;
+        };
+        priority_queue<pair<int, PaymentNode*>, vector<pair<int, PaymentNode*>>, decltype(compare)> pq(compare);
+        pq.push({0, nodes[start]});
+
+        while (!pq.empty()) {
+            auto [currentDistance, currentNode] = pq.top();
+            pq.pop();
+
+            for (const auto& [neighbor, cost] : currentNode->connections) {
+                int newDistance = currentDistance + cost;
+                if (newDistance < distances[neighbor->type]) {
+                    distances[neighbor->type] = newDistance;
+                    previous[neighbor->type] = currentNode->type;
+                    pq.push({newDistance, neighbor});
+                }
+            }
+        }
+
+        if (distances[end] == INT_MAX) {
+            cout << "No path found from " << start << " to " << end << ".\n";
+            return;
+        }
+
+        cout << "Shortest path from " << start << " to " << end << ":\n";
+        string current = end;
+        vector<string> path;
+        while (current != start) {
+            path.push_back(current);
+            current = previous[current];
+        }
+        path.push_back(start);
+        reverse(path.begin(), path.end());
+
+        for (const string& step : path) {
+            cout << step << (step == end ? "\n" : " -> ");
+        }
+        cout << "Total cost: " << distances[end] << "\n";
+    }
+
+    ~PaymentGraph() {
+        for (auto& node : nodes) {
+            delete node.second;
+        }
+    }
+};
+
+int main() {
+    PaymentGraph paymentSystem;
+
+    paymentSystem.addPaymentType("Credit");
+    paymentSystem.addPaymentType("Debit");
+    paymentSystem.addPaymentType("UPI");
+    paymentSystem.addPaymentType("NetBanking");
+    paymentSystem.addPaymentType("Wallet");
+
+    paymentSystem.addConnection("Credit", "Debit", 0.2);
+    paymentSystem.addConnection("Credit", "UPI", 0.1);
+    paymentSystem.addConnection("Debit", "NetBanking", 0.1);
+    paymentSystem.addConnection("UPI", "Wallet", 0.2);
+    paymentSystem.addConnection("NetBanking", "Wallet", 0.1);
+
+    paymentSystem.findShortestPath("Debit", "UPI");
+
+    return 0;
+}
+    </pre>
+</body>
+</html>

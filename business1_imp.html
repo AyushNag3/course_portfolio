@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Pollution Sorting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vehicle Pollution Sorting</h1>
+        <p>Enter the number of passengers to find suitable vehicles and sort them by pollution per passenger:</p>
+        <label for="passengers">Number of Passengers:</label>
+        <input type="number" id="passengers" placeholder="Enter number of passengers">
+        <button onclick="sortVehicles()">Find and Sort Vehicles</button>
+
+        <div id="result" class="result" style="display: none;">
+            <h2>Sorted Vehicles</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Pollution Per Passenger</th>
+                        <th>Total Pollution</th>
+                        <th>Passengers</th>
+                    </tr>
+                </thead>
+                <tbody id="vehicle-table">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const allVehicles = [
+            { name: "Passenger Cars", pollution: 45, passengers: 5 },
+            { name: "Light-Duty Trucks", pollution: 20, passengers: 3 },
+            { name: "Heavy-Duty Trucks", pollution: 15, passengers: 2 },
+            { name: "Motorcycles", pollution: 5, passengers: 2 },
+            { name: "Buses", pollution: 5, passengers: 50 },
+            { name: "Aviation", pollution: 5, passengers: 150 }
+        ];
+
+        function heapify(vehicles, n, i) {
+            let largest = i;
+            const left = 2 * i + 1;
+            const right = 2 * i + 2;
+
+            const pollutionPerPassenger = vehicle => vehicle.pollution / vehicle.passengers;
+
+            if (left < n && pollutionPerPassenger(vehicles[left]) > pollutionPerPassenger(vehicles[largest])) {
+                largest = left;
+            }
+
+            if (right < n && pollutionPerPassenger(vehicles[right]) > pollutionPerPassenger(vehicles[largest])) {
+                largest = right;
+            }
+
+            if (largest !== i) {
+                [vehicles[i], vehicles[largest]] = [vehicles[largest], vehicles[i]];
+                heapify(vehicles, n, largest);
+            }
+        }
+
+        function heapSort(vehicles) {
+            const n = vehicles.length;
+
+            for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                heapify(vehicles, n, i);
+            }
+
+            for (let i = n - 1; i > 0; i--) {
+                [vehicles[0], vehicles[i]] = [vehicles[i], vehicles[0]];
+                heapify(vehicles, i, 0);
+            }
+        }
+
+        function sortVehicles() {
+            const numPassengers = parseInt(document.getElementById("passengers").value);
+            if (isNaN(numPassengers) || numPassengers <= 0) {
+                alert("Please enter a valid number of passengers.");
+                return;
+            }
+
+            const suitableVehicles = allVehicles.filter(vehicle => vehicle.passengers >= numPassengers);
+
+            if (suitableVehicles.length === 0) {
+                alert("No suitable vehicles found for the entered number of passengers.");
+                return;
+            }
+
+            heapSort(suitableVehicles);
+
+            const tableBody = document.getElementById("vehicle-table");
+            tableBody.innerHTML = "";
+
+            suitableVehicles.reverse().forEach(vehicle => {
+                const pollutionPerPassenger = (vehicle.pollution / vehicle.passengers).toFixed(2);
+                const row = `
+                    <tr>
+                        <td>${vehicle.name}</td>
+                        <td>${pollutionPerPassenger}</td>
+                        <td>${vehicle.pollution}%</td>
+                        <td>${vehicle.passengers}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            document.getElementById("result").style.display = "block";
+        }
+    </script>
+</body>
+</html>

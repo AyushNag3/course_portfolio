@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Graph Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment Graph Simulation</h1>
+
+    <div>
+        <h3>Add Payment Type</h3>
+        <input type="text" id="paymentType" placeholder="Payment Type">
+        <button onclick="addPaymentType()">Add</button>
+    </div>
+
+    <div>
+        <h3>Add Connection</h3>
+        <input type="text" id="fromType" placeholder="From">
+        <input type="text" id="toType" placeholder="To">
+        <input type="number" id="cost" placeholder="Cost">
+        <button onclick="addConnection()">Add</button>
+    </div>
+
+    <div>
+        <h3>Find Shortest Path</h3>
+        <input type="text" id="startType" placeholder="Start">
+        <input type="text" id="endType" placeholder="End">
+        <button onclick="findShortestPath()">Find</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script>
+        class PaymentNode {
+            constructor(type) {
+                this.type = type;
+                this.connections = [];
+            }
+        }
+
+        class PaymentGraph {
+            constructor() {
+                this.nodes = new Map();
+            }
+
+            addPaymentType(type) {
+                if (!this.nodes.has(type)) {
+                    this.nodes.set(type, new PaymentNode(type));
+                }
+            }
+
+            addConnection(from, to, cost) {
+                if (this.nodes.has(from) && this.nodes.has(to)) {
+                    this.nodes.get(from).connections.push({ node: this.nodes.get(to), cost });
+                }
+            }
+
+            findShortestPath(start, end) {
+                if (!this.nodes.has(start) || !this.nodes.has(end)) {
+                    displayOutput("Payment types not found in the graph.");
+                    return;
+                }
+
+                const distances = new Map();
+                const previous = new Map();
+                const pq = [];
+
+                this.nodes.forEach((_, key) => {
+                    distances.set(key, Infinity);
+                });
+                distances.set(start, 0);
+                pq.push({ node: this.nodes.get(start), distance: 0 });
+
+                while (pq.length > 0) {
+                    pq.sort((a, b) => a.distance - b.distance);
+                    const { node, distance } = pq.shift();
+
+                    if (distance > distances.get(node.type)) continue;
+
+                    node.connections.forEach(({ node: neighbor, cost }) => {
+                        const newDistance = distance + cost;
+                        if (newDistance < distances.get(neighbor.type)) {
+                            distances.set(neighbor.type, newDistance);
+                            previous.set(neighbor.type, node.type);
+                            pq.push({ node: neighbor, distance: newDistance });
+                        }
+                    });
+                }
+
+                if (distances.get(end) === Infinity) {
+                    displayOutput(`No path found from ${start} to ${end}.`);
+                    return;
+                }
+
+                const path = [];
+                let current = end;
+                while (current) {
+                    path.unshift(current);
+                    current = previous.get(current);
+                }
+
+                displayOutput(
+                    `Shortest path from ${start} to ${end}: ${path.join(" -> ")}, Total cost: ${distances.get(end)}`
+                );
+            }
+        }
+
+        const paymentSystem = new PaymentGraph();
+
+        function addPaymentType() {
+            const type = document.getElementById("paymentType").value;
+            paymentSystem.addPaymentType(type);
+            displayOutput(`Added payment type: ${type}`);
+        }
+
+        function addConnection() {
+            const from = document.getElementById("fromType").value;
+            const to = document.getElementById("toType").value;
+            const cost = parseInt(document.getElementById("cost").value);
+            paymentSystem.addConnection(from, to, cost);
+            displayOutput(`Added connection: ${from} -> ${to} with cost ${cost}`);
+        }
+
+        function findShortestPath() {
+            const start = document.getElementById("startType").value;
+            const end = document.getElementById("endType").value;
+            paymentSystem.findShortestPath(start, end);
+        }
+
+        function displayOutput(message) {
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerText = message;
+        }
+    </script>
+</body>
+</html>
